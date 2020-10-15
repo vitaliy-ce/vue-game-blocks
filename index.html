@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+	<meta charset="UTF-8">
+	<title>Game blocks - vue.js</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+	<!-- development version, includes helpful console warnings -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+	<!-- https://learn.javascript.ru/drag-and-drop-objects -->
+	<script src="DragManager.js"></script>
+
+	<style>
+		* {
+		    box-sizing: border-box;
+		}
+		body {
+			padding: 0;
+			margin: 0;
+		}
+		#app {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			min-height: 100vh;
+			padding: 30px;
+		}
+
+		.points-wrap {
+			display: flex;
+			flex-direction: column;
+		}
+		.points-line {
+			display: flex;
+		}
+		.point {
+			width: 30px;
+			height: 30px;
+			border-radius: 5px;
+			margin: 2px;
+			transition: 0.2s all;
+		}
+		.bg-0 {
+			background: rgba(0, 0, 0, 0.1);
+		}
+		.bg-1 {
+			background: #43A047;
+		}
+		.bg-2 {
+			background: #5E35B1;
+		}
+		.bg-3 {
+			background: #D81B60;
+		}
+		.bg-4 {
+			background: #FFB300;
+		}
+		.bg-5 {
+			background: #1E88E5;
+		}
+
+		.figures {
+			display: flex;
+			align-items: center;
+			margin-top: 40px;
+		}
+
+		.figures .points-wrap {
+			margin: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="app">
+
+
+		<div class="points-wrap droppable">
+			<div 
+				class="points-line"
+				v-for="(point_line, y) in points"
+				:key="y"
+			>
+				<point
+					v-for="(point, x) in point_line"
+					:key="x+'-'+y"
+					:x="x"
+					:y="y"
+					:point="point"
+				></point>
+			</div>
+		</div>
+
+
+		<div class="figures">
+			<div 
+				class="points-wrap draggable"
+				v-for="(points, key) in figures"
+				:key="key"
+				:data-key="key"
+			>
+				<div 
+					class="points-line"
+					v-for="(point_line, y) in points"
+					:key="key+'-'+y"
+				>
+					<point
+						v-for="(point, x) in point_line"
+						:key="key+'-'+x+'-'+y"
+						:x="x"
+						:y="y"
+						:point="point"
+					></point>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+
+	<script>
+		Vue.component('point', {
+			props: ['point', 'x', 'y'],
+			computed: {
+			},
+			template: `
+				<div class="point" :class="'bg-'+point" :data-x="x" :data-y="y"></div>
+			`
+		})
+
+		var app = new Vue({
+			el: '#app',
+			data: {
+				size_square: 8,
+				points: [],
+				figures: [
+					[
+						[2, 2],
+						[2, 2],
+					],
+					[
+						[1, 1, 1, 1],
+					],
+					[
+						[3, 3],
+						[null, 3],
+						[null, 3],
+					],
+				],
+			},
+			computed: {
+			},
+			methods: {
+				clearLines: function() {
+					let clear_rows = [];
+					let clear_cols = [];
+
+					// Пройдемся по массиву и найдем строки и столбцы которые нужно обнулить
+					this.points.forEach(function(points_line, y, points) {
+						let is_clear_rows = true;
+
+						points_line.forEach(function(point, x, points_line) {
+							// Если в строке есть хоть одно нулевое значение то эту строку не нужно обнулять
+							if (!point) { is_clear_rows = false; }
+
+							// Проверим все столбцы на первой итерации
+							if (y == 0) {
+								let is_clear_cols = true;
+								for (var i = points_line.length - 1; i >= 0; i--) {
+									// Если в столбце есть хоть одно нулевое значение то этот столбец не нужно обнулять
+									if (!points[i][x]) { is_clear_cols = false; }
+								}
+
+								if (is_clear_cols) { clear_cols.push(x); }
+							}
+						});
+
+						if (is_clear_rows) { clear_rows.push(y); }
+					});
+
+					// Обнулим строки и столбцы
+					if (clear_rows.length || clear_cols.length) {
+						this.points.forEach(function(points_line, y) {
+							points_line.forEach(function(point, x) {
+								if (clear_rows.includes(y) || clear_cols.includes(x)) {
+									// Значение в массиве меняется так, для сохранения реактивности
+									this.$set(this.points[y], x, 0);
+								}
+							}, this);
+						}, this);
+					}
+				},
+
+				addInPoints: function(x, y, key) {
+					if (!x || !y || !key || !this.figures[key]) { return; }
+
+					// Проверим можно ли вставить блок
+					let is_add = true;
+					this.figures[key].forEach(function(points_line, figure_y) {
+						points_line.forEach(function(point, figure_x) {
+							if (parseInt(y)+figure_y > this.points.length - 1) {
+								is_add = false;
+							} else if (parseInt(x)+figure_x > this.points[parseInt(y)+figure_y].length - 1) {
+								is_add = false;
+							} else if (
+								!!point 
+								&& this.points[parseInt(y)+figure_y][parseInt(x)+figure_x] 
+							) {
+								is_add = false;
+							}
+						}, this);
+					}, this);
+
+					if (is_add) {
+						this.figures[key].forEach(function(points_line, figure_y) {
+							points_line.forEach(function(point, figure_x) {
+								if (!!point) {
+									this.$set(this.points[parseInt(y)+figure_y], parseInt(x)+figure_x, point);
+								}
+							}, this);
+						}, this);
+
+						this.figures.splice(key, 1);
+						this.clearLines();
+					}
+				}
+			},
+			mounted() {
+				// Генерация поля
+				for (let y = 0; y < this.size_square; y++) {
+					this.points.push([]);
+					for (let x = 0; x < this.size_square; x++) {
+						this.$set(this.points[y], x, 0);
+					}
+				}
+
+				DragManager.onDragCancel = function(dragObject) {
+					dragObject.avatar.rollback();
+				};
+
+				DragManager.onDragEnd = function(dragObject, dropElem) {
+					let x = dragObject.target_elem.dataset.x;
+					let y = dragObject.target_elem.dataset.y;
+					let key = dragObject.elem.dataset.key;
+
+					this.addInPoints(x, y, key);
+					dragObject.avatar.rollback();
+
+				}.bind(this);
+			}
+		});
+
+
+	</script>
+</body>
+</html>
