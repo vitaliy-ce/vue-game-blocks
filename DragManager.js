@@ -75,9 +75,6 @@ var DragManager = new function() {
 			dragObject.avatar.style.top = e.pageY - dragObject.shiftY + 'px';			
 		}
 
-		var test = document.getElementById('test');
-		test.innerHTML = dragObject.avatar.style.left +' '+ dragObject.avatar.style.top;
-
 		return false;
 	}
 

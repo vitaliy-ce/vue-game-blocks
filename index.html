@@ -116,10 +116,7 @@
 				</div>
 			</div>
 		</div>
-
 	</div>
-
-	<div id="test"></div>
 
 
 	<script>
@@ -137,18 +134,74 @@
 			data: {
 				size_square: 8,
 				points: [],
-				figures: [
+				figures: [],
+				figures_tmpl: [
+					[
+						[1],
+					],
 					[
 						[2, 2],
 						[2, 2],
 					],
 					[
-						[1, 1, 1, 1],
+						[2, 2, 2],
+						[2, 2, 2],
+						[2, 2, 2],
 					],
 					[
+						[3, 3, 3, 3],
+					],
+					[
+						[4, 4],
+						[null, 4],
+						[null, 4],
+					],
+					[
+						[5, 5],
+						[5, null],
+						[5, null],
+					],
+					[
+						[null, 4],
+						[null, 4],
+						[4, 4],
+					],
+					[
+						[5, null],
+						[5, null],
+						[5, 5],
+					],
+					[
+						[1, 1, 1],
+						[1, null, null],
+					],
+					[
+						[2, null, null],
+						[2, 2, 2],
+					],
+					[
+						[3, 3, 3],
+						[null, null, 3],
+					],
+					[
+						[null, null, 4],
+						[4, 4, 4],
+					],
+					[
+						[5, null],
+						[5, 5],
+					],
+					[
+						[1, 1],
+						[1, null],
+					],
+					[
+						[2, 2],
+						[null, 2],
+					],
+					[
+						[null, 3],
 						[3, 3],
-						[null, 3],
-						[null, 3],
 					],
 				],
 			},
@@ -226,6 +279,17 @@
 
 						this.figures.splice(key, 1);
 						this.clearLines();
+
+						if (!this.figures.length) {
+							this.addFigures();
+						}
+					}
+				},
+
+				addFigures: function () {					
+					for (let y = 0; y < 3; y++) {
+						let key = Math.floor(Math.random() * Math.floor(this.figures_tmpl.length));
+						this.figures.push(this.figures_tmpl[key]);
 					}
 				}
 			},
@@ -237,6 +301,9 @@
 						this.$set(this.points[y], x, 0);
 					}
 				}
+
+				// Добавим фигуры
+				this.addFigures();
 
 				DragManager.onDragCancel = function(dragObject) {
 					dragObject.avatar.rollback();
