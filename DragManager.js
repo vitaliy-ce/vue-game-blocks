@@ -14,6 +14,7 @@ var DragManager = new function() {
 	var self = this;
 
 	function onMouseDown(e) {
+		e.preventDefault(); 
 		var elem = e.target.closest('.draggable');
 		if (!elem) return;
 
@@ -32,6 +33,7 @@ var DragManager = new function() {
 	}
 
 	function onMouseMove(e) {
+		e.preventDefault();
 		if (!dragObject.elem) return; // элемент не зажат
 
 		if (!dragObject.avatar) { // если перенос не начат...
@@ -71,14 +73,14 @@ var DragManager = new function() {
 			dragObject.avatar.style.left = Math.round(e.changedTouches[0].pageX - dragObject.shiftX) + 'px';
 			dragObject.avatar.style.top = Math.round(e.changedTouches[0].pageY - dragObject.shiftY) + 'px';
 		} else {
-			dragObject.avatar.style.left = e.pageX - dragObject.shiftX + 'px';
-			dragObject.avatar.style.top = e.pageY - dragObject.shiftY + 'px';			
+			dragObject.avatar.style.left = Math.round(e.pageX - dragObject.shiftX) + 'px';
+			dragObject.avatar.style.top = Math.round(e.pageY - dragObject.shiftY) + 'px';
 		}
-
 		return false;
 	}
 
 	function onMouseUp(e) {
+		e.preventDefault();
 		if (dragObject.avatar) { // если перенос идет
 			finishDrag(e);
 		}
@@ -86,6 +88,7 @@ var DragManager = new function() {
 		// перенос либо не начинался, либо завершился
 		// в любом случае очистим "состояние переноса" dragObject
 		dragObject = {};
+		return false;
 	}
 
 	function finishDrag(e) {
